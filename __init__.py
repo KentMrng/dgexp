@@ -144,6 +144,8 @@ soft_ik_percentage = dge(
 """
 import math
 
+from maya import cmds
+
 from .pyparsing import (
     Literal,
     Word,
@@ -160,7 +162,6 @@ from .pyparsing import (
     FollowedBy,
 )
 
-from maya import cmds
 
 
 def dgexp(expression, container=None, **kwargs):
@@ -250,7 +251,7 @@ class DGParser(object):
         assignment = Optional(assignment_op).setParseAction(self.push_last) + ternary
 
         self.bnf = assignment
-    
+
     def eval(self, expression_string, container=None, **kwargs):
         long_kwargs = {}
         for key, value in kwargs.items():
@@ -269,7 +270,7 @@ class DGParser(object):
                     attr = f"{value}.{token}"
                     value += f".{cmds.attributeName(attr, long=True)}"
             long_kwargs[key] = value
-        
+
         self.kwargs = long_kwargs
 
         # Reverse variable look up to write cleaner notes
@@ -288,14 +289,14 @@ class DGParser(object):
         if self.container:
             self.publish_container_attributes()
         return result
-    
+
     def push_first(self, tokens):
         self.expr_stack.append(tokens[0])
-    
+
     def push_last(self, tokens):
         for token in tokens:
             self.assignment_stack.append(token)
-        
+
     def push_unary_minus(self, tokens):
         for token in tokens:
             if token == "-":
@@ -319,7 +320,9 @@ class DGParser(object):
             first_term = self.evaluate_stack(stack)
             note = f"{first_term} {self.conditionals[condition]} {second_term} ? {if_true} : {if_false}"
 
-            return self.get_op_result(note, self.condition, first_term, second_term, condition, if_true, if_false, op_str=note)
+            return self.get_op_result(
+                note, self.condition, first_term, second_term, condition, if_true, if_false, op_str=note
+            )
         elif op == ":":
             # Return the if_true statement to the ternary
             return self.evaluate_stack(stack)
@@ -354,7 +357,7 @@ class DGParser(object):
                 return int(op)
             except ValueError:
                 return float(op)
-    
+
     def get_op_result(self, op, func, *args, **kwargs):
         op_str = kwargs.get("op_str", self.op_str(op, *args))
         result = self.created_nodes.get(op_str)
@@ -363,14 +366,14 @@ class DGParser(object):
             self.create_nodes[op_str] = result
             self.add_notes(result, op_str)
         return result
-    
+
 
     def add(self, v1, v2):
         return self._connect_plus_minus_average(1, v1, v2)
-    
+
     def subtract(self, v1, v2):
         return self._connect_plus_minus_average(2, v1, v2)
-    
+
     def _connect_plus_minus_average(self, operation, v1, v2):
         pma = cmds.createNode("plusMinusAverage")
         cmds.setAttr(f"{pma}.operation", operation)
@@ -381,7 +384,7 @@ class DGParser(object):
             if isinstance(v, str) and is_attribute_array(v):
                 in_attr = "input3D"
                 out_attr = "output3D"
-        
+
         for i, v in enumerate([v1, v2]):
             if isinstance(v, str):
                 if is_attribute_array(v):
@@ -405,13 +408,13 @@ class DGParser(object):
 
     def divide(self, v1, v2):
         return self._connect_multiply_divide(2, v1, v2)
-    
+
     def pow(self, v1, v2):
         return self._connect_multiply_divide(3, v1, v2)
-    
+
     def exp(self, v):
         return self._connect_multiply_divide(3, math.e, v)
-    
+
     def sqrt(self, v):
         return self._connect_multiply_divide(3, v, 0.5)
 
@@ -423,7 +426,7 @@ class DGParser(object):
         for v in [v1, v2]:
             if isinstance(v, str) and is_attribute_array(v):
                 value_count = 3
-        
+
         for i, v in enumerate([v1, v2]):
             i += 1
             if isinstance(v, str):
@@ -457,7 +460,7 @@ class DGParser(object):
             else:
                 for rgb in "RGB":
                     cmds.setAttr(f"{clamp}.{attr}{rgb}", v)
-        
+
         value_count = 1
         if isinstance(v, str):
             if is_attribute_array(value):
@@ -470,7 +473,7 @@ class DGParser(object):
             # Unlikely for a static value to be clamped, but it should still work
             for rgb in "RGB":
                 cmds.setAttr(f"{clamp}.input{rgb}", value)
-        
+
         return f"{clamp}.output" if value_count == 3 else f"{clamp}.outputR"
 
     def condition(self, first_term, second_term, operation, if_true, if_false):
@@ -482,7 +485,7 @@ class DGParser(object):
                 cmds.connectAttr(v, f"{cnd}.{attr}")
             else:
                 cmds.setAttr(f"{cnd}.{attr}", v)
-        
+
         value_count = 1
         for v, attr in [[if_true, "colorIfTrue"], [if_false, "colorIfFalse"]]:
             if isinstance(v, str):
@@ -491,12 +494,12 @@ class DGParser(object):
                     cmds.connectAttr(v, f"{cnd}.{attr}")
                 else:
                     for rgb in "RGB":
-                        cmds.connectAttr(v, "{node}.{attr}{rgb}")
+                        cmds.connectAttr(v, f"{cnd}.{attr}{rgb}")
             else:
                 cmds.setAttr(f"{cnd}.{attr}R", v)
-            
+
             return f"{cnd}.outColor" if value_count == 3 else f"{cnd}.outColorR"
-    
+
     def lerp(self, a, b, t):
         bta = cmds.createNode("blendTwoAttr")
 
@@ -506,27 +509,27 @@ class DGParser(object):
             # Static value on attributesBlender doesn't make much sence
             # but we don't want to erro out
             cmds.setAttr(f"{bta}.attributesBlender", t)
-        
+
         for i, v in enumerate([a, b]):
             if isinstance(v, str):
                 cmds.connectAttr(v, f"{bta}.input[{i}]")
             else:
                 cmds.setAttr(f"{bta}.input[{i}]", v)
-        
+
         return f"{bta}.output"
-    
+
     def abs(self, x):
         return dgexp("x > 0 ? x : -x", x=x)
-    
+
     def min(self, x, y):
         return self.condition(x, y, self.conditionals.index("<="), x, y)
-    
+
     def max(self, x, y):
         return self.condition(x, y, self.conditionals.index(">="), x, y)
-    
+
     def sin(self, x):
         return self._euler_to_quat(x, "X")
-    
+
     def cos(self, x):
         return self._euler_to_quat(x, "W")
 
@@ -538,7 +541,7 @@ class DGParser(object):
             cmds.connectAttr(x, f"{mdl}.input2")
         else:
             cmds.setAttr(f"{mdl}.input2", x)
-        
+
         quat = cmds.createNode("eulerToQuat")
         cmds.connectAttr(f"{mdl}.output", f"{quat}.inputRotateX")
         return f"{quat}.outputQuat.outputQuat{attr}"
@@ -552,7 +555,7 @@ class DGParser(object):
         angle = cmds.createNode("angleBetween")
         for attr in [f"{i}{j}" for i in "12" for j in "XYZ"]:
             cmds.setAttr(f"{angle}.vector{attr}", 0)
-        
+
         if isinstance(x, str):
             cmds.connectAttr(x, f"{angle}.vector1X")
             dgexp("y = x == 0.0 ? 1.0 : abs(x)", y=f"{angle}.vector2X", x=x)
@@ -566,7 +569,7 @@ class DGParser(object):
         angle = cmds.createNode("angleBetween")
         for attr in [f"{i}{j}" for i in "12" for j in "XYZ"]:
             cmds.setAttr(f"{angle}.vector{attr}", 0)
-        
+
         if isinstance(x, str):
             cmds.connectAttr(x, f"{angle}.vector1Y")
         else:
@@ -575,7 +578,7 @@ class DGParser(object):
         cmds.connectAttr(result, f"{angle}.vector1X")
         dgexp("y = abs(x) == 1.0 ? 1.0 : r", y=f"{angle}.vector2X", x=x, r=result)
         return dgexp("x < 0 ? -y : y", x=x, y=f"{angle}.axisAngle.angle")
-    
+
     def atan(self, x):
         angle = cmds.createNode("angleBetween")
         for attr in [f"{i}{j}" for i in "12" for j in "XYZ"]:
@@ -607,7 +610,7 @@ class DGParser(object):
         notes += f"Operation:\n  {op_str}\n\n"
         notes += "kwargs:\n  {}".format("\n  ".join([f"{x}: {self.kwargs[x]}" for x in keys]))
         cmds.setAttr(f"{node}.notes", notes, type="string")
-    
+
     def publish_container_attributes(self):
         self.add_notes(self.container, self.expression_string)
         external_connections = cmds.container(self.container, q=True, connectionList=True)
@@ -618,7 +621,7 @@ class DGParser(object):
                 continue
 
             # To connect multiple attributes to a bound container attribute,
-            # we need to create an intermediary attribute that is bound and 
+            # we need to create an intermediary attribute that is bound and
             # connected to the internal attributes
             attr_type = attribute_type(value)
             kwargs = {"dt": attr_type} if attr_type == "matrix" else {"at": attr_type}
@@ -634,7 +637,7 @@ class DGParser(object):
                     node_name = connection.split(".")[0]
                     if node_name in container_nodes:
                         cmds.connectAttr(published_attr, connection, force=True)
-                
+
                 source_plug = cmds.listConnections(value, destination=False, plugs=True)
                 if source_plug:
                     source_plug = source_plug[0]
@@ -643,16 +646,16 @@ class DGParser(object):
                         cmds.connectAttr(source_plug, published_attr, force=True)
                         cmds.connectAttr(published_attr, value, force=True)
         cmds.container(self.container, e=True, current=False)
-    
+
     def op_str(self, op, *args):
         """Get the string form of the op and args.
-        
+
         This is used for notes on the node as well as identifying which nodes can be reused.
 
         Args:
             op (str): Name of the op
             args (): Optional op arguments
-        
+
         Returns:
             str: The uniqe op string
         """
