@@ -40,7 +40,7 @@ soft_ik_percentage = dgexp(
 -------------------------------------------------------------------------------
 ## Supported Syntax
 
-###Operations:
+### Operations:
     +  # addition
     -  # subtraction
     *  # multiplication
