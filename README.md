@@ -2,16 +2,15 @@
 
 Allow the creation of node networks through equation strings.
 
-Dependency Graph EXPression (dgexp) is a convenience API used to simplify the creation
-of Maya DG node networks. Rather than scripting out many createNode, get/setAttr,
-connectAttr commands, you can specify a string equation.
+Dependency Graph EXPression (dgexp) is a convenience API used to simplify the creation of Maya DG node networks.
+Rather than scripting out many createNode, get/setAttr, connectAttr commands, you can specify a string equation.
 
 No complied plug-ins are used. All created nodes are vanilla Maya nodes.
 Each created node has notes added to it to describe its place in the equation.
 
 --------------------------------------------------------------------------------
 ## Example Usage
-'''python
+```python
 from dgexp import dgexp
 
 # Create a simple mathematical graph
@@ -36,7 +35,7 @@ soft_ik_percentage = dgexp(
     x=f"{stretch_scale_mdn}.outputX",
     softIk=f"{ik_control}.softIk
 )
-'''
+```
 
 -------------------------------------------------------------------------------
 ## Supported Syntax
@@ -74,7 +73,7 @@ soft_ik_percentage = dgexp(
 
 ### Before:
 
-'''python
+```python
 # (1.0 - softik)
 one_minus = cmds.createNode("plusMinusAverage", name=f"{name}_one_minus_softik")
 cmds.setAttr(f"{one_minus}.operation", 2)
@@ -130,15 +129,15 @@ cmds.connectAttr(f"{adl}.output", f"{cnd}.colorIfTrueR")
 cmds.connectAttr(percent_rest_distance, f"{cnd}.colorIfFalseR")
 
 softik_percentage = "{}.outColorR".format(cnd)
-'''
+```
 
 ### After:
 
-'''python
+```python
 soft_ik_percentage = dge(
     "x > (1.0 - softIk) ? (1.0 - softIk) + softIk * (1.0 - exp(-(x - (1.0 - softIk)) / softIk)) : x",
     container=f"{name}_softik",
     x=percent_rest_distance,
     softIk=softik,
 )
-'''
+```
