@@ -137,10 +137,6 @@ soft_ik_percentage = dge(
     x=percent_rest_distance,
     softIk=softik,
 )
-
-
-)
-
 """
 import math
 
