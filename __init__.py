@@ -61,6 +61,7 @@ Functions:
     asin(x)
     atan(x)
     distance(node1, node2)
+    hypot(x, y)
 
 Constants:
     PI
@@ -159,7 +160,6 @@ from .pyparsing import (
 )
 
 
-
 def dgexp(expression, container=None, **kwargs):
     parser = DGParser()
     return parser.eval(expression, container=container, **kwargs)
@@ -199,6 +199,7 @@ class DGParser(object):
             "asin": self.asin,
             "atan": self.atan,
             "distance": self.distance,
+            "hypot": self.hypot,
         }
 
         self.conditionals =["==", "!=", ">", ">=", "<", "<="]
@@ -593,6 +594,9 @@ class DGParser(object):
         cmds.connectAttr(node1, f"{db}.inMatrix1")
         cmds.connectAttr(node2, f"{db}.inMatrix2")
         return f"{db}.distance"
+
+    def hypot(self, x, y):
+        return dgexp("sqrt(pow(x, 2) + pow(y, 2))", x=x, y=y)
 
     def add_notes(self, node, op_str):
         node = node.split(".")[0]
