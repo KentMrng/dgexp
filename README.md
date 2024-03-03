@@ -1,6 +1,6 @@
 # dgexp
 
-**This script extract from "cmt/dge" created by Chad Vernon.**
+**This script extract from "cmt/dge.py" created by Chad Vernon.**
 
 https://github.com/chadmv/cmt
 
