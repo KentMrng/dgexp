@@ -180,6 +180,7 @@ class DGParser(object):
         self.operations = {
             "+": self.add,
             "-": self.subtract,
+            "*": self.multiply,
             "/": self.divide,
             "^": self.pow,
         }
