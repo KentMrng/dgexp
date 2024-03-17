@@ -63,6 +63,14 @@ Functions:
     distance(node1, node2)
     hypot(x, y)
 
+    not(x)
+    and(x, y)
+    nand(x, y)
+    or(x, y)
+    nor(x, y)
+    xor(x, y)
+    xnor(x, y)
+
 Constants:
     PI
     E
@@ -143,7 +151,7 @@ import math
 
 from maya import cmds
 
-from .pyparsing import (
+from pyparsing import (
     Literal,
     Word,
     Group,
@@ -163,6 +171,13 @@ from .pyparsing import (
 def dgexp(expression, container=None, **kwargs):
     parser = DGParser()
     return parser.eval(expression, container=container, **kwargs)
+
+
+PLUS = 1
+MINUS = 2
+MULTIPLY = 1
+DIVIDE = 2
+POW = 3
 
 
 class DGParser(object):
@@ -200,6 +215,13 @@ class DGParser(object):
             "atan": self.atan,
             "distance": self.distance,
             "hypot": self.hypot,
+            "not": self._not,
+            "and": self._and,
+            "nand": self.nand,
+            "or": self._or,
+            "nor": self.nor,
+            "xor": self.xor,
+            "xnor": self.xnor,
         }
 
         self.conditionals =["==", "!=", ">", ">=", "<", "<="]
@@ -366,10 +388,10 @@ class DGParser(object):
         return result
 
     def add(self, v1, v2):
-        return self._connect_plus_minus_average(1, v1, v2)
+        return self._connect_plus_minus_average(PLUS, v1, v2)
 
     def subtract(self, v1, v2):
-        return self._connect_plus_minus_average(2, v1, v2)
+        return self._connect_plus_minus_average(MINUS, v1, v2)
 
     def _connect_plus_minus_average(self, operation, v1, v2):
         pma = cmds.createNode("plusMinusAverage")
@@ -401,19 +423,19 @@ class DGParser(object):
         return f"{pma}.{out_attr}"
 
     def multiply(self, v1, v2):
-        return self._connect_multiply_divide(1, v1, v2)
+        return self._connect_multiply_divide(MULTIPLY, v1, v2)
 
     def divide(self, v1, v2):
-        return self._connect_multiply_divide(2, v1, v2)
+        return self._connect_multiply_divide(DIVIDE, v1, v2)
 
     def pow(self, v1, v2):
-        return self._connect_multiply_divide(3, v1, v2)
+        return self._connect_multiply_divide(POW, v1, v2)
 
     def exp(self, v):
-        return self._connect_multiply_divide(3, math.e, v)
+        return self._connect_multiply_divide(POW, math.e, v)
 
     def sqrt(self, v):
-        return self._connect_multiply_divide(3, v, 0.5)
+        return self._connect_multiply_divide(POW, v, 0.5)
 
     def _connect_multiply_divide(self, operation, v1, v2):
         md = cmds.createNode("multiplyDivide")
@@ -597,6 +619,27 @@ class DGParser(object):
 
     def hypot(self, x, y):
         return dgexp("sqrt(pow(x, 2) + pow(y, 2))", x=x, y=y)
+
+    def _not(self, x):
+        return dgexp("1 - x", x=x)
+
+    def _and(self, x, y):
+        return dgexp("(x + y) == 2", x=x, y=y)
+
+    def nand(self, x, y):
+        return dgexp("(x + y) < 2", x=x, y=y)
+
+    def _or(self, x, y):
+        return dgexp("(x + y) >= 1", x=x, y=y)
+
+    def nor(self, x, y):
+        return dgexp("(x + y) == 0", x=x, y=y)
+
+    def xor(self, x, y):
+        return dgexp("(x + y) == 1", x=x, y=y)
+
+    def xnor(self, x, y):
+        return dgexp("x == y", x=x, y=y)
 
     def add_notes(self, node, op_str):
         node = node.split(".")[0]
