@@ -6,7 +6,6 @@ https://github.com/chadmv/cmt
 
 --------------------------------------------------------------------------------
 
-
 Allow the creation of node networks through equation strings.
 
 Dependency Graph EXPression (dgexp) is a convenience API used to simplify the creation of Maya DG node networks.
@@ -14,6 +13,10 @@ Rather than scripting out many createNode, get/setAttr, connectAttr commands, yo
 
 No complied plug-ins are used. All created nodes are vanilla Maya nodes.
 Each created node has notes added to it to describe its place in the equation.
+
+---
+## Dependencies
+- [pyparsing](https://github.com/pyparsing/pyparsing)
 
 --------------------------------------------------------------------------------
 ## Example Usage
