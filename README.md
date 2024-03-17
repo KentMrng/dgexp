@@ -1,4 +1,4 @@
-![](https://img.shields.io/badge/python-3-blue)
+![](https://img.shields.io/badge/maya-2022~-blue)
 
 # dgexp
 
