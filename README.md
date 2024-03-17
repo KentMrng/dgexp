@@ -70,6 +70,14 @@ soft_ik_percentage = dgexp(
     asin(x)
     atan(x)
     distance(node1, node2)
+    hypot(x, y)
+    not(x)
+    and(x, y)
+    nand(x, y)
+    or(x, y)
+    nor(x, y)
+    xor(x, y)
+    xnor(x, y)
 
 ### Constants:
     PI
