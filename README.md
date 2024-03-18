@@ -21,7 +21,7 @@ Each created node has notes added to it to describe its place in the equation.
 - [pyparsing](https://github.com/pyparsing/pyparsing)
 
 --------------------------------------------------------------------------------
-## Example Usage
+## Exsample Usage
 ```python
 from dgexp import dgexp
 
