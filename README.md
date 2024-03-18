@@ -155,7 +155,7 @@ softik_percentage = "{}.outColorR".format(cnd)
 ### After:
 
 ```python
-soft_ik_percentage = dge(
+soft_ik_percentage = dgexp(
     "x > (1.0 - softIk) ? (1.0 - softIk) + softIk * (1.0 - exp(-(x - (1.0 - softIk)) / softIk)) : x",
     container=f"{name}_softik",
     x=percent_rest_distance,
